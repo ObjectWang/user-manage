@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.user.manage.mapper.UserGroupRelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.example.user.manage.domain.po.UserGroupRel">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="group_id" property="groupId"/>
+        <result column="level" property="level"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id
+        , user_id, group_id, level, create_time
+    </sql>
+
+    <insert id="insertMember">
+        insert into tb_user_group_rel(user_id, group_id)
+        values (#{userId}, #{groupId})
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO tb_user_group_rel (user_id, group_id, level) VALUES
+        <foreach collection="userGroups" separator="," item="item">
+            (#{item.userId},#{item.groupId},#{item.level})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByUserId">
+        delete
+        from tb_user_group_rel
+        where user_id = #{userId}
+    </delete>
+
+    <delete id="deleteByGroupId">
+        delete
+        from tb_user_group_rel
+        where group_id = #{groupId}
+    </delete>
+
+    <select id="selectByUserId" resultType="org.example.user.manage.domain.vo.GroupDisVo">
+        select distinct ug.group_id, g.name
+        from tb_user_group_rel ug
+                 left join tb_group g on ug.group_id = g.id
+        where ug.user_id = #{userId}
+    </select>
+    <select id="selectUngrouped" resultType="org.example.user.manage.domain.vo.UserInfoVo">
+        select distinct u.id, u.nick_name, u.user_name, u.status
+        from tb_user u
+                 left join tb_user_group_rel ug on u.id = ug.user_id
+                 left join tb_group g on ug.group_id = g.id
+        where u.id not in (select u1.id
+                           from tb_user u1
+                                    inner join tb_user_group_rel ug1 on u1.id = ug1.user_id)
+    </select>
+    <select id="selectByGroupId" resultType="org.example.user.manage.domain.dto.GroupDto">
+        select r1.id, r1.nick_name, r1.sex, r1.work_id, r2.role, r1.level
+        from (select distinct u.id        as id,
+                              u.nick_name as nick_name,
+                              u.sex       as sex,
+                              u.user_name   as work_id,
+                              ug.level    as level
+              from tb_user u
+                       left join tb_user_group_rel ug on u.id = ug.user_id
+                       left join tb_group g on ug.group_id = g.id
+              where ug.group_id = #{groupId}) as r1
+                 left join (select distinct u.id as id, string_agg(r.name, ',') as role
+                            from tb_user u
+                                     left join tb_user_role_rel ur on u.id = ur.user_id
+                                     left join tb_role r on ur.role_id = r.id
+                            group by u.id) as r2 on r1.id = r2.id
+    </select>
+    <select id="selectGrouped" resultType="org.example.user.manage.domain.vo.UserInfoVo">
+        select distinct u.id, u.nick_name, u.user_name
+        from tb_user u
+                 left join tb_user_group_rel ug on u.id = ug.user_id
+                 left join tb_group g on ug.group_id = g.id
+        where u.id in (select u1.id
+                       from tb_user u1
+                                inner join tb_user_group_rel ug1 on u1.id = ug1.user_id)
+
+    </select>
+    <select id="isLeader" resultType="org.example.user.manage.domain.po.UserGroupRel">
+        select *
+        from tb_user_group_rel ug
+        where ug.user_id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="isLeaderOne" resultType="org.example.user.manage.domain.po.UserGroupRel">
+        select *
+        from tb_user_group_rel ug
+        where ug.user_id = #{id} and ug.level = 1
+    </select>
+    <select id="selectOne" resultType="org.example.user.manage.domain.po.UserGroupRel">
+        select *
+        from tb_user_group_rel ug
+        where ug.user_id = #{id}
+    </select>
+
+
+</mapper>

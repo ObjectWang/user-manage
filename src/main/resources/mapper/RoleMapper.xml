@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.user.manage.mapper.RoleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.example.user.manage.domain.po.Role">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_delete" property="isDelete"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id
+        , name, description, create_by, create_time, update_by, update_time, is_delete
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_role(
+        <trim suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="description != null and description != ''">description,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isDelete != null">is_delete</if>
+        </trim>
+        )values(
+        <trim suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="description != null and description != ''">#{description},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isDelete != null">#{isDelete}</if>
+        </trim>
+        )
+    </insert>
+
+    <update id="deleteById">
+        update tb_role
+        set is_delete = 1
+        where id = #{id}
+    </update>
+
+    <update id="update">
+        update tb_role
+        <set>
+            description = #{description},
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDelete != null">is_delete = #{isDelete}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="selectAll" resultType="org.example.user.manage.domain.dto.RoleDto">
+        select distinct r.id, r.name, r.description, r.create_time, u1.nick_name as create_By, r.update_time,
+        u2.nick_name as updateBy, r.is_delete from tb_role r
+        left join tb_user u1 on r.create_by = u1.id
+        left join tb_user u2 on r.create_by = u2.id
+        <where>
+            r.is_delete = 0
+            <if test="name != null and name != ''">
+                and r.name like concat('%', #{name}, '%') escape '/'
+            </if>
+        </where>
+        order by r.update_time desc
+    </select>
+
+    <select id="selectById" resultType="org.example.user.manage.domain.po.Role">
+        select *
+        from tb_role
+        where id = #{id}
+          and is_delete = 0
+    </select>
+    <select id="selectList" resultType="org.example.user.manage.domain.po.Role">
+        select *
+        from tb_role
+        where is_delete = 0;
+    </select>
+
+    <select id="selectByName" resultType="org.example.user.manage.domain.po.Role">
+        select *
+        from tb_role
+        where is_delete = 0
+          and name = #{name}
+    </select>
+
+    <select id="selectByIds" resultType="org.example.user.manage.domain.po.Role">
+        select *
+        from tb_role
+        where is_delete = 0
+        and id in
+        <foreach collection="roleIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+
+</mapper>

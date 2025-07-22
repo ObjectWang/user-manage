@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.user.manage.mapper.UserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.example.user.manage.domain.po.User">
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="nick_name" property="nickName"/>
+        <result column="sex" property="sex"/>
+        <result column="password" property="password"/>
+        <result column="mobile" property="mobile"/>
+        <result column="marital" property="marital"/>
+        <result column="email" property="email"/>
+        <result column="address" property="address"/>
+        <result column="status" property="status"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_delete" property="isDelete"/>
+    </resultMap>
+
+    <resultMap id="UserGroupMap" type="org.example.user.manage.domain.dto.UserGroupDto">
+        <id column="id" property="agentId"/>
+        <result column="user_name" property="userName"/>
+        <result column="nick_name" property="nickName"/>
+        <result column="name" property="groupName"/>
+        <result column="leveler" property="leveler"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id
+        , user_name, nick_name, sex, password, mobile, marital, email, address, status, create_by, create_time, update_by, update_time, is_delete
+    </sql>
+
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_user(
+        <trim suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="nickName != null and nickName != ''">nick_name,</if>
+            <if test="sex != null">sex,</if>
+            <if test="password != null and password != ''">password,</if>
+            <if test="mobile != null and mobile != ''">mobile,</if>
+            <if test="marital != null">marital,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isDelete != null">is_delete</if>
+        </trim>
+        )values(
+        <trim suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="nickName != null and nickName != ''">#{nickName},</if>
+            <if test="sex != null">#{sex},</if>
+            <if test="password != null and password != ''">#{password},</if>
+            <if test="mobile != null and mobile != ''">#{mobile},</if>
+            <if test="marital != null">#{marital},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isDelete != null">#{isDelete}</if>
+        </trim>
+        )
+    </insert>
+
+    <update id="deleteUserById">
+        update tb_user
+        set is_delete = 1
+        where id = #{id}
+    </update>
+
+    <update id="updateUser">
+        update tb_user
+        <set>
+            <if test="userName != null and userName != ''">user_name = #{userName,jdbcType=VARCHAR},</if>
+            <if test="nickName != null and nickName != ''">nick_name = #{nickName},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="mobile != null and mobile != ''">mobile = #{mobile},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDelete != null">is_delete = #{isDelete},</if>
+            marital = #{marital},
+            email = #{email},
+            address = #{address}
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="start">
+        update tb_user
+        set status      = 1,
+            update_time = CURRENT_TIMESTAMP
+        where id = #{id}
+    </update>
+
+    <update id="stop">
+        update tb_user
+        set status      = 0,
+            update_time = CURRENT_TIMESTAMP
+        where id = #{id}
+    </update>
+
+
+    <select id="selectUserAll" resultType="org.example.user.manage.domain.dto.UserPageResultDto">
+        select distinct u.id as userId, u.user_name, u.nick_name, g.name as group, r1.role, u.status, u.update_time
+        from tb_user u
+        left join tb_user_role_rel ur on u.id = ur.user_id
+        left join tb_role r on ur.role_id = r.id
+        left join tb_user_group_rel ug on u.id = ug.user_id
+        left join tb_group g on ug.group_id = g.id
+        left join
+        ( select distinct u.id as id, string_agg(r.name, ',') as role from tb_user u
+        left join tb_user_role_rel ur on u.id = ur.user_id
+        left join tb_role r on ur.role_id = r.id
+        where r.is_delete = 0
+        group by u.id
+        ) as r1 on u.id = r1.id
+        <where>
+            u.is_delete = 0
+            <if test="userName != null">
+                and u.user_name like concat('%', #{userName,jdbcType=VARCHAR}, '%')
+            </if>
+            <if test="nickName != null and nickName != ''">
+                and u.nick_name like concat('%', #{nickName}, '%') escape '/'
+            </if>
+            <if test="groupId != null">
+                and g.id = #{groupId}
+            </if>
+            <if test="roleId != null">
+                and r.id = #{roleId}
+            </if>
+        </where>
+        order by u.update_time desc
+    </select>
+
+    <select id="selectById" resultType="org.example.user.manage.domain.po.User">
+        select *
+        from tb_user
+        where id = #{id}
+          and is_delete = 0
+    </select>
+
+    <select id="selectByWorkId" resultType="org.example.user.manage.domain.po.User">
+        select *
+        from tb_user
+        where user_name = #{workId}
+          and is_delete = 0
+    </select>
+
+    <select id="selectUrlById" resultType="java.lang.String">
+        select distinct u1.url
+        from tb_user u
+                 left join tb_user_role_rel ur on u.id = ur.user_id
+                 left join tb_role r on ur.role_id = r.id
+                 left join tb_role_permission_rel rp on ur.role_id = rp.role_id
+                 left join tb_permission_resource_rel pr on rp.permission_id = pr.permission_id
+                 left join tb_url u1 on pr.resource_id = u1.id
+        where pr.resource_type = 0
+          and u.id = #{id}
+          and u1.is_delete = 0
+          and r.is_delete = 0
+    </select>
+
+    <select id="selectMenuIdById" resultType="java.lang.String">
+        select distinct m.code
+        from tb_user u
+                 left join tb_user_role_rel ur on u.id = ur.user_id
+                 left join tb_role r on ur.role_id = r.id
+                 left join tb_role_permission_rel rp on ur.role_id = rp.role_id
+                 left join tb_permission_resource_rel pr on rp.permission_id = pr.permission_id
+                 left join tb_menu m on pr.resource_id = m.id
+        where pr.resource_type = 1
+          and u.id = #{id}
+          and m.is_delete = 0
+          and r.is_delete = 0
+    </select>
+
+    <select id="selectByNickName" resultType="org.example.user.manage.domain.po.User">
+        select *
+        from tb_user
+        where
+            nick_name like concat('%',
+            REPLACE(REPLACE(REPLACE(#{nickName, jdbcType=VARCHAR}, '/', '//'), '%', '/%'), '_', '/_')
+            , '%')
+            escape '/'
+          and is_delete = 0
+    </select>
+    <select id="selectAllUserGroupDto" resultType="org.example.user.manage.domain.dto.UserGroupDto">
+        select tu.id        agentId,
+               tu.user_name   workId,
+               tu.nick_name nickName,
+               tg.id        groupId,
+               tg."name"    groupName,
+               tugr."level" leveler
+        from tb_user tu
+                 left join
+             tb_user_group_rel tugr on tu.id = tugr.user_id
+                 left join tb_group tg on tugr.group_id = tg.id and tg.is_delete = 0
+        where tu.is_delete = 0
+    </select>
+
+    <select id="QueryByWorkIdAndNickName" resultType="org.example.user.manage.domain.bo.UserInfoBo">
+        select distinct u.id, u.user_name, u.nick_name, g.name from tb_user u
+        left join tb_user_group_rel ug on u.id = ug.user_id
+        left join tb_group g on ug.group_id = g.id
+        <where>
+            u.is_delete = 0
+            <if test="userName != null and userName != ''">
+                and u.user_name = #{userName,jdbcType=VARCHAR}
+            </if>
+            <if test="nickName != null and nickName != ''">
+                and u.nick_name like concat('%', #{nickName}, '%') escape '/'
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByIds" resultType="org.example.user.manage.domain.bo.UserInfoBo">
+        select distinct u.id, u.user_name, u.nick_name, g.name as group_name from tb_user u
+        left join tb_user_group_rel ug on u.id = ug.user_id
+        left join tb_group g on ug.group_id = g.id
+        where u.is_delete = 0 and u.id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectAllUsers" resultType="org.example.user.manage.domain.po.User">
+        select * from tb_user
+        where is_delete = 0
+    </select>
+    <select id="selectelementIdsById" resultType="java.lang.Long">
+        select distinct e.global_id
+        from tb_user u
+                 left join tb_user_role_rel ur on u.id = ur.user_id
+                 left join tb_role r on ur.role_id = r.id
+                 left join tb_role_permission_rel rp on ur.role_id = rp.role_id
+                 left join tb_permission_resource_rel pr on rp.permission_id = pr.permission_id
+                 left join tb_element e on pr.resource_id = e.id
+        where pr.resource_type = 2
+          and u.id = #{id}
+          and e.is_delete = 0
+          and r.is_delete = 0
+    </select>
+
+
+</mapper>

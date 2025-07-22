@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.user.manage.mapper.UserRoleRelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.example.user.manage.domain.po.UserRoleRel">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="role_id" property="roleId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id
+        , user_id, role_id, create_time
+    </sql>
+
+    <insert id="batchInsert">
+        INSERT INTO tb_user_role_rel (user_id, role_id) VALUES
+        <foreach collection="roleIds" separator="," item="item">
+            (#{userId},#{item})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByUserId">
+        delete
+        from tb_user_role_rel
+        where user_id = #{userId}
+    </delete>
+    <delete id="deleteByRoleId">
+        delete
+        from tb_user_role_rel
+        where role_id = #{roleId}
+    </delete>
+
+    <select id="selectByUserId" resultType="org.example.user.manage.domain.vo.RoleDisVo">
+        select distinct ur.role_id, r.name
+        from tb_user_role_rel ur
+                 left join tb_role r on ur.role_id = r.id
+        where ur.user_id = #{userId} and r.is_delete = 0
+    </select>
+
+</mapper>

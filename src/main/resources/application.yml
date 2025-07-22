@@ -1,0 +1,16 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: user_manage
+  datasource:
+    druid:
+      driver-class-name: org.postgresql.Driver
+      url: jdbc:postgresql://localhost:5432/db_user
+      username: user_admin
+      password: wswyh111
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

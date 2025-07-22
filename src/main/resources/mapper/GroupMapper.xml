@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.user.manage.mapper.GroupMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.example.user.manage.domain.po.Group">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_delete" property="isDelete"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id
+        , name, create_by, create_time, update_by, update_time, is_delete
+    </sql>
+
+    <insert id="insertGroup" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_group(
+        <trim suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="isDelete != null">is_delete</if>
+        </trim>
+        )values(
+        <trim suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="isDelete != null">#{isDelete}</if>
+        </trim>
+        )
+    </insert>
+
+    <update id="deleteById">
+        update tb_group
+        set is_delete = 1
+        where id = #{id}
+    </update>
+
+    <update id="update">
+        update tb_group
+        <set>
+            <if test="id != null">id = #{id},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="isDelete != null">is_delete = #{isDelete},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <select id="selectById" resultType="org.example.user.manage.domain.vo.GroupVo">
+        select distinct u.id, u.nick_name, u.sex, u.work_id, ug.level
+        from tb_group g
+                 left join tb_user_group_rel ug on g.id = ug.group_id
+                 left join tb_user u on ug.user_id = u.id
+        where g.id = #{id}
+          and g.is_delete = 0
+    </select>
+    <select id="selectList" resultType="org.example.user.manage.domain.po.Group">
+        select *
+        from tb_group
+        where is_delete = 0
+    </select>
+    <select id="selectGroupAll" resultType="org.example.user.manage.domain.dto.GroupPageResultDto">
+        select g.id, g.name, r1.count, g.create_time, g.update_time
+        from tb_group g
+                 left join (select g.id, count(ug.id) as count
+                            from tb_group g
+                                left join tb_user_group_rel ug
+                            on g.id = ug.group_id
+                                left join tb_user u on ug.user_id = u.id
+                            where u.is_delete = 0
+                            group by g.id) as r1
+                           on g.id = r1.id
+        where g.is_delete = 0
+        order by g.update_time desc
+    </select>
+
+    <select id="selectByName" resultType="org.example.user.manage.domain.po.Group">
+        select *
+        from tb_group
+        where is_delete = 0
+          and name = #{name}
+    </select>
+
+    <select id="selectGroupById" resultType="org.example.user.manage.domain.po.Group">
+        select *
+        from tb_group
+        where id = #{id}
+          and is_delete = 0
+    </select>
+
+    <select id="selectAllMember" resultType="org.example.user.manage.domain.dto.GroupMemberDto">
+        select distinct g.id as group_id, g.name as group_name, u.id, u.nick_name, u.work_id, u.status
+        from tb_group g
+            left join tb_user_group_rel ug on g.id = ug.group_id
+            left join tb_user u on ug.user_id = u.id
+        where u.is_delete = 0 and g.is_delete = 0
+    </select>
+
+</mapper>

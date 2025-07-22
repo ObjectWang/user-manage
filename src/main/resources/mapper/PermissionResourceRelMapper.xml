@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.user.manage.mapper.PermissionResourceRelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="org.example.user.manage.domain.po.PermissionResourceRel">
+        <!--@Table tb_permission_resource_rel-->
+        <id column="id" property="id"/>
+        <result column="permission_id" property="permissionId"/>
+        <result column="resource_type" property="resourceType"/>
+        <result column="resource_id" property="resourceId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id
+        , permission_id, resource_type, resource_id, create_time
+    </sql>
+    <select id="selectPermissionByMenuId" resultType="org.example.user.manage.domain.dto.PermissionDto">
+        select pr.permission_id, p.name as permission_name
+        from tb_permission_resource_rel pr
+                 left join tb_permission p on pr.permission_id = p.id
+        where pr.resource_type = 1
+          and pr.resource_id = #{menuId}
+    </select>
+
+
+</mapper>
